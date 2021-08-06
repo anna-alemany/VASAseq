@@ -82,6 +82,7 @@ def get_cellDict(cell):
     biotypeWsplicing = ['ProteinCoding','lncRNA','UnprocessedPseudogene','ProcessedPseudogene','TranscribedProcessedPseudogene','TranscribedUnprocessedPseudogene', 'TrCGene','PolymorphicPseudogene', 'UnitaryPseudogene', 'TranscribedUnitaryPseudogene']
     cellfiles = glob.glob(cell + '*_genes.bed.gz')
     cellfiles = [f for f in cellfiles if os.stat(f).st_size != 0]
+    cnt = {}
     for cellfile in cellfiles:
         df = read_csv(cellfile, sep = '\t' , header = None, names = ['Chromosome','Start','End','Name','Strand','Gene','Info','Length','Cov'], low_memory = False)
         if len(df) == 0:
@@ -113,7 +114,8 @@ pool = multiprocess.Pool(ncores)
 gcnt = {}
 for (cell,cnt) in pool.imap_unordered(get_cellDict, cells):
     print(cell)
-    gcnt[cell] = cnt
+    if len(cnt) > 0:
+        gcnt[cell] = cnt
 
 pickle.dump(gcnt, open(output + 'dict.pickle', 'wb'))
 
