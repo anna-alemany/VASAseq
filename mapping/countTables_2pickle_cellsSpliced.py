@@ -84,6 +84,8 @@ def get_cellDict(cell):
     cellfiles = [f for f in cellfiles if os.stat(f).st_size != 0]
     for cellfile in cellfiles:
         df = read_csv(cellfile, sep = '\t' , header = None, names = ['Chromosome','Start','End','Name','Strand','Gene','Info','Length','Cov'], low_memory = False)
+        if len(df) == 0:
+            continue
         if cellidFROMfilename == 'f':
             cellid = cellfile[:cellfile.index('_cbc')] 
         else:
