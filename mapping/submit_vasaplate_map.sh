@@ -93,31 +93,31 @@ do
     ### trim
     jobid=trim-${lib}
     jtrim=2
-#    jtrim=$(sbatch --export=All -N 1 -J ${jobid} -e ${folder}/${jobid}.err -o ${folder}/${jobid}.out --dependency=afterany:$jcbc -t 05:00:00 --mem=10G --wrap="${p2s}/trim.sh ${folder}/${lib}_cbc.fastq.gz ${folder} ${p2trimgalore} ${p2cutadapt}")
+    jtrim=$(sbatch --export=All -N 1 -J ${jobid} -e ${folder}/${jobid}.err -o ${folder}/${jobid}.out --dependency=afterany:$jcbc -t 05:00:00 --mem=10G --wrap="${p2s}/trim.sh ${folder}/${lib}_cbc.fastq.gz ${folder} ${p2trimgalore} ${p2cutadapt}")
     jtrim=$(echo $jtrim | awk '{print $NF}')
 
     ### ribo-map
     jobid=ribo-${lib}
     jribo=3
-#    jribo=$(sbatch --export=All -c 8 -J $jobid -o ${folder}/${jobid}.err -t 10:00:00 --mem=40G --dependency=afterany:$jtrim --wrap="${p2s}/ribo-bwamem.sh $riboref ${folder}/${lib}_cbc_trimmed_homoATCG.fq.gz ${folder}/${lib}_cbc_trimmed_homoATCG $p2bwa $p2samtools y $p2s")
+    jribo=$(sbatch --export=All -c 8 -J $jobid -o ${folder}/${jobid}.err -t 10:00:00 --mem=40G --dependency=afterany:$jtrim --wrap="${p2s}/ribo-bwamem.sh $riboref ${folder}/${lib}_cbc_trimmed_homoATCG.fq.gz ${folder}/${lib}_cbc_trimmed_homoATCG $p2bwa $p2samtools y $p2s")
     jribo=$(echo $jribo | awk '{print $NF}')
 
     ### map to genome
     jobid=gmap-$lib
     jgmap=4
-#    jgmap=$(sbatch --export=All -c 8 -J $jobid -o ${folder}/${jobid}.err -t 10:00:00 --mem=40G --dependency=afterany:$jribo --wrap="${p2s}/map_star.sh ${p2star} ${p2samtools} ${genome} ${folder}/${lib}_cbc_trimmed_homoATCG.nonRibo.fastq.gz ${folder}/${lib}_cbc_trimmed_homoATCG.nonRibo_E99_")
+    jgmap=$(sbatch --export=All -c 8 -J $jobid -o ${folder}/${jobid}.err -t 10:00:00 --mem=40G --dependency=afterany:$jribo --wrap="${p2s}/map_star.sh ${p2star} ${p2samtools} ${genome} ${folder}/${lib}_cbc_trimmed_homoATCG.nonRibo.fastq.gz ${folder}/${lib}_cbc_trimmed_homoATCG.nonRibo_E99_")
     jgmap=$(echo $jgmap | awk '{print $NF}')
 
     jobid=b2bs-$lib
     jb2bs=5
-#    jb2bs=$(sbatch --export=All -c 1 -N 1 -J $jobid -o ${folder}/${jobid}.err -t 12:00:00 --mem=40G --dependency=afterany:$jgmap --wrap="${p2s}/deal_with_singlemappers.sh ${folder}/${lib}_cbc_trimmed_homoATCG.nonRibo_E99_Aligned.out.bam ${refBED} y ${p2samtools} ${p2bedtools}")
+    jb2bs=$(sbatch --export=All -c 1 -N 1 -J $jobid -o ${folder}/${jobid}.err -t 12:00:00 --mem=40G --dependency=afterany:$jgmap --wrap="${p2s}/deal_with_singlemappers.sh ${folder}/${lib}_cbc_trimmed_homoATCG.nonRibo_E99_Aligned.out.bam ${refBED} y ${p2samtools} ${p2bedtools}")
     jb2bs=$(echo $jb2bs | awk '{print $NF}')
     lane=$((lane+1))
     jbeds[$lane]=$jb2bs
 
     jobid=b2bm-$lib
     jb2bm=6
-#    jb2bm=$(sbatch --export=All -c 1 -N 1 -J $jobid -o ${folder}/${jobid}.err -t 10:00:00 --mem=40G --dependency=afterany:$jgmap --wrap="${p2s}/deal_with_multimappers.sh ${folder}/${lib}_cbc_trimmed_homoATCG.nonRibo_E99_Aligned.out.bam ${refBED} y ${p2samtools} ${p2bedtools}")
+    jb2bm=$(sbatch --export=All -c 1 -N 1 -J $jobid -o ${folder}/${jobid}.err -t 10:00:00 --mem=40G --dependency=afterany:$jgmap --wrap="${p2s}/deal_with_multimappers.sh ${folder}/${lib}_cbc_trimmed_homoATCG.nonRibo_E99_Aligned.out.bam ${refBED} y ${p2samtools} ${p2bedtools}")
     jb2bm=$(echo $jb2bm | awk '{print $NF}')
     lane=$((lane+1))
     jbeds[$lane]=$jb2bm
