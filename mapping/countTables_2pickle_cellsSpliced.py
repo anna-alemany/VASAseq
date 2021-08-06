@@ -7,7 +7,7 @@ from collections import Counter
 import pickle
 import gzip 
 from itertools import islice
-import multiprocessing
+import multiprocess
 import glob
 
 try:
@@ -107,7 +107,7 @@ def get_cellDict(cell):
      
 cells = glob.glob(cellFolder + '/*.singlemappers_genes.bed.gz')
 cells = [c[:-len('.singlemappers_genes.bed.gz')] for c in cells]
-pool = multiprocessing.Pool(ncores)
+pool = multiprocess.Pool(ncores)
 gcnt = {}
 for (cell,cnt) in pool.imap_unordered(get_cellDict, cells):
     print(cell)
