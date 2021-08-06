@@ -1,13 +1,14 @@
 #!/bin/bash
 
 ### input paths (to modify by user)
-p2s=/exports/ana-scarlab/aalemany/bin/vasaplate_split
-p2trimgalore=/exports/ana-scarlab/bin/TrimGalore-0.6.6
-p2cutadapt=/home/aalemany/anaconda3/bin/
-p2bwa=/exports/ana-scarlab/bin/bwa-0.7.17
-p2samtools=/exports/ana-scarlab/bin/samtools-1.11
-p2star=/exports/ana-scarlab/bin/STAR-2.7.7a/bin/Linux_x86_64
-p2bedtools=/exports/ana-scarlab/bin/bedtools2/bin
+p2s=/exports/ana-scarlab/aalemany/bin/vasaplate_split   # path to mapping scripts in your computer/HPC
+p2trimgalore=/exports/ana-scarlab/bin/TrimGalore-0.6.6  # path to TrimGalore
+p2cutadapt=/home/aalemany/anaconda3/bin/                # path to cutadapt
+p2bwa=/exports/ana-scarlab/bin/bwa-0.7.17               # path to BWA
+p2samtools=/exports/ana-scarlab/bin/samtools-1.11       #  path to samtools
+p2star=/exports/ana-scarlab/bin/STAR-2.7.7a/bin/Linux_x86_64    # path to STAR
+p2bedtools=/exports/ana-scarlab/bin/bedtools2/bin          # path to bedtools
+email=a.alemany@lumc.nl                                 # email
 
 ### check input parameters
 if [ $# -ne 7 ]
@@ -78,7 +79,7 @@ jcbc=1
 if [ $fqext == "y" ]
 then
     jobid=extract-${lib}
-    jcbc=$(sbatch --export=All -c 1 -N 1 -J ${jobid} -e ${jobid}.err -o ${jobid}.out -t 48:00:00 --mem=10G --mail-type=END --mail-user=annalemany@gmail.com --wrap="${p2s}/extractBC.sh ${lib} vasaplate ${p2s} ${folder}")
+    jcbc=$(sbatch --export=All -c 1 -N 1 -J ${jobid} -e ${jobid}.err -o ${jobid}.out -t 48:00:00 --mem=10G --mail-type=END --mail-user=${email} --wrap="${p2s}/extractBC.sh ${lib} vasaplate ${p2s} ${folder}")
     jcbc=$(echo $jcbc | awk '{print $NF}')
     exit
 fi
@@ -130,12 +131,12 @@ do
     j=${j}:$k
 done
 jcout=7
-jcout=$(sbatch --export=All -c 8 -t 60:00:00 --mem=160G --dependency=afterany${j} -J cnt${folder} -e cnt${folder}.err -o cnt${folder}.out --mail-type=END --mail-user=annalemany@gmail.com --wrap="${p2s}/countTables_2pickle_cellsSpliced.py ${folder} ${folder} vasa $cellidori";)
+jcout=$(sbatch --export=All -c 8 -t 60:00:00 --mem=160G --dependency=afterany${j} -J cnt${folder} -e cnt${folder}.err -o cnt${folder}.out --mail-type=END --mail-user=${email} --wrap="${p2s}/countTables_2pickle_cellsSpliced.py ${folder} ${folder} vasa $cellidori";)
 jcout=$(echo $jcout | awk '{print $NF}')
 
 jobid=pick-$lib
 jpick=8
-jpick=$(sbatch --export=All -c 1 -t 15:00:00 --mem=160G --dependency=afterany:$jcout -J pick${folder} -e pick${folder}.err -o pick${folder}.out --mail-type=END --mail-user=annalemany@gmail.com --wrap="${p2s}/countTables_fromPickle.py ${folder}.pickle.gz ${folder} vasa y") 
+jpick=$(sbatch --export=All -c 1 -t 15:00:00 --mem=160G --dependency=afterany:$jcout -J pick${folder} -e pick${folder}.err -o pick${folder}.out --mail-type=END --mail-user=${email} --wrap="${p2s}/countTables_fromPickle.py ${folder}.pickle.gz ${folder} vasa y") 
 
 
 
