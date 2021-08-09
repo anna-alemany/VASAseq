@@ -1,5 +1,13 @@
 #!/usr/bin/env python
 # coding: utf-8
+
+# Here, we identify cells in S-phase for all timepoints, separatedly and combined, based on histone expression. 
+# We use only count tables produced with all gene counts (falling into any position along the gene body)
+# We filter the data based on the parameters in filterParams.
+
+# Run script as: 
+# ```./03_cellCycle.py ```
+
 # ## Libraries
 import sys, os
 import numpy as np
