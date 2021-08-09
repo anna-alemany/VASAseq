@@ -78,11 +78,10 @@ def gene_assignment(indf):
     return umi, label, gene
 
 def get_cellDict(cell):
-    cnt = {}
+    cnt = {}; cellid = 'NaN'
     biotypeWsplicing = ['ProteinCoding','lncRNA','UnprocessedPseudogene','ProcessedPseudogene','TranscribedProcessedPseudogene','TranscribedUnprocessedPseudogene', 'TrCGene','PolymorphicPseudogene', 'UnitaryPseudogene', 'TranscribedUnitaryPseudogene']
     cellfiles = glob.glob(cell + '*_genes.bed.gz')
-    cellfiles = [f for f in cellfiles if os.stat(f).st_size != 0]
-    cnt = {}
+    cellfiles = [f for f in cellfiles if os.stat(f).st_size != 0] # this does not always work! Delete before hand empty bed.gz files as an alternative. 
     for cellfile in cellfiles:
         df = read_csv(cellfile, sep = '\t' , header = None, names = ['Chromosome','Start','End','Name','Strand','Gene','Info','Length','Cov'], low_memory = False)
         if len(df) == 0:
