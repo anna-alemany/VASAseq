@@ -2,7 +2,10 @@
 # coding: utf-8
 # **Description**
 # 
-# In this notebook I perform the quality checks (QC) of the VASA libraries (mouse embryo data, E6.5, E7.5, E8.5 and E9.5). 
+# In this notebook we perform the quality checks (QC) of the VASA libraries (mouse embryo data: E6.5, E7.5, E8.5 and E9.5) and identify doublet cells with scrublet. 
+# The notebook takes as an input the merged tables (in feather format) for both counts obtained using reads mapping in the whole gene body, 
+# or counts obtained from reads that fall into the 80% side of the 5' end of the gene. 
+# To run in, write in the terminal `01_qc_checks_HPCversion.py E65` for E6.5, or `01_qc_checks_HPCversion.py E75` for E7.5, etc. 
 
 # ### Libraries
 import os, sys
@@ -26,7 +29,8 @@ try:
 except:
     sys.exit("Please, give timepoint (E65, E75, E85, E95)")
 
-if timepoint == 'E65':
+# provide paths to all input files for each timepoint
+if timepoint == 'E65': 
     outdir = '/hpc/hub_oudenaarden/aalemany/vasaseq/NovaSeq/E65/mergedData/'
     outdirfiles = '/hpc/hub_oudenaarden/aalemany/vasaseq/NovaSeq/E65/mergedData/'
     p2merged = '/hpc/hub_oudenaarden/aalemany/vasaseq/NovaSeq/E65/mergedData/'
@@ -62,6 +66,7 @@ elif timepoint == 'E95':
     p2hi = '/hpc/hub_oudenaarden/aalemany/vasaseq/NovaSeq/E95/highCov/count_Tables_with_filters/'
     prefFeatherHi = 'NovaSeq_E9.5_highCov_filtered'
 
+# common filtering parameters for all libraries
 minReads = 10**(3.5)
 minMap = 0.6
 minMap3 = 0.2
