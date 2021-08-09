@@ -1,5 +1,12 @@
 #!/usr/bin/env python
 # coding: utf-8
+
+# Second round of QC: produces some plots and saves data to scanpy object.
+# Creates 3 different scanpy objects: 1 for only spliced counts, another for only unspliced counts, and the 3rd for both spliced and unspliced counts.
+# In the 3rd object, spliced and unspliced counts from the same gene are given different gene identifiers.
+# Each scanpy object is further split into new objects, in which only counts from different biotypes are used (protein-coding, smallRNA, lncRNA, tRNA)
+# For all objects, only genes present in at least 2 cells are kept. 
+
 # ## Libraries
 import sys, os
 import numpy as np
@@ -19,31 +26,35 @@ from pandarallel import pandarallel
 import scipy
 
 try:
-    timepoint = sys.argv[1]
+    timepoint = sys.argv[1] # E65, E75, E85, E95
+    genebody = sys.argv[2] # all/high
 except:
-    sys.exit("Please, give timepoint (E65, E75, E85, E95)")
+    sys.exit("Please, give:\n(1) timepoint (E65, E75, E85, E95);\n(2) gene body coverage (all/high)")
 
-if timepoint == 'E65':
-#    inputmetadir = '../E65/mergedData/'
-#    inputfeatherdir = '../E65/mergedData/allCov_Filter/'
-    inputmetadir = '/hpc/hub_oudenaarden/aalemany/vasaseq/NovaSeq/E65/mergedData/'
+# path to input files for each timepoint (metadata and merged count tables)
+inputmetadir = '/hpc/hub_oudenaarden/aalemany/vasaseq/NovaSeq/'+timepoint+'/mergedData/'
+if timepoint == 'E65' and genebody == 'all':
     inputfeatherdir = '/hpc/hub_oudenaarden/aalemany/vasaseq/NovaSeq/E65/all_covs/count_tables_filters/'
-elif timepoint == 'E75':
-#    inputmetadir = '../E75/mergedData/'
-#    inputfeatherdir = '../E75/raw_count_tables/all_reads/'
-    inputmetadir = '/hpc/hub_oudenaarden/aalemany/vasaseq/NovaSeq/E75/mergedData/'
+elif timepoint == 'E75' and genebody == 'all':
     inputfeatherdir = '/hpc/hub_oudenaarden/aalemany/vasaseq/NovaSeq/E75/allCov/count_tables_with_filters/'
-elif timepoint == 'E85': 
-    inputmetadir = '/hpc/hub_oudenaarden/aalemany/vasaseq/NovaSeq/E85/mergedData/'
+elif timepoint == 'E85' and genebody == 'all':: 
     inputfeatherdir = '/hpc/hub_oudenaarden/aalemany/vasaseq/NovaSeq/E85/allCov/count_tables_with_filter/'
-elif timepoint == 'E95':
-    inputmetadir = '/hpc/hub_oudenaarden/aalemany/vasaseq/NovaSeq/E95/mergedData/'
+elif timepoint == 'E95' and genebody == 'all'::
     inputfeatherdir = '/hpc/hub_oudenaarden/aalemany/vasaseq/NovaSeq/E95/allCov/count_Tables_with_filters/'
-
-outdir = '../'+timepoint+'/res_scanpy_all_rawQC_2021'
+elif timepoint == 'E65' and genebody == 'high'
+    inputfeatherdir = '/hpc/hub_oudenaarden/aalemany/vasaseq/NovaSeq/E65/high_cov/filtered_tables/'
+elif timepoint == 'E75' and genebody == 'high'
+    inputfeatherdir = '/hpc/hub_oudenaarden/aalemany/vasaseq/NovaSeq/E75/highCov/count_tables_with_filters/'
+elif timepoint == 'E85' and genebody == 'high'
+    inputfeatherdir = '/hpc/hub_oudenaarden/aalemany/vasaseq/NovaSeq/E85/highCov/count_tables_with_filters/'
+elif timepoint == 'E95' and genebody == 'high'
+    inputfeatherdir = '/hpc/hub_oudenaarden/aalemany/vasaseq/NovaSeq/E95/highCov/count_Tables_with_filters/'
+    
+# path for output file, depending to each timepoint
+outdir = '../'+timepoint+'/res_scanpy_'+genebody+'_rawQC_2021'
 os.system('mkdir -p '+outdir)
 
-# ## Read cell metadata
+# ## Read cell metadata (output from script 01)
 meta_df = read_csv(inputmetadir + '/cell_meta'+timepoint+'_VASA.tsv', sep = '\t', index_col = 0)
 meta_df = meta_df[meta_df['tech_filter']&np.invert(meta_df['doublet'])]
 
@@ -208,16 +219,10 @@ def histo_geneThresholds(adatas, outputname, log = False):
         adata = adatas[bio]
         for j, (ax, n) in enumerate(zip(axs, adata)):
             df = adata[n].obs
-            if log:
-                xra = np.log10(df['n_genes_'+n]+1)
-            else:
-                xra = df['n_genes_'+n]
+            xra = np.log10(df['n_genes_'+n]+1) if log else df['n_genes_'+n]
             for i, rep in enumerate(sorted(set(df['sample']))):
                 cells = df[df['sample']==rep].index
-                if log: 
-                    x = np.log10(df.loc[cells,'n_genes_'+n]+1)
-                else: 
-                    x = df.loc[cells,'n_genes_'+n]
+                x = np.log10(df.loc[cells,'n_genes_'+n]+1) if log else df.loc[cells,'n_genes_'+n]
                 ax.hist(x, bins = 100, range = (xra.min()*0.9, xra.max()*1.1), color = plaa.colors()[i], label = rep, alpha = 0.5)
                 h = np.histogram(x, bins = 100, range = (xra.min()*0.9, xra.max()*1.1))
                 if i == 0:
