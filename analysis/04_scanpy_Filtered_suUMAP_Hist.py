@@ -1,5 +1,15 @@
 #!/usr/bin/env python
 # coding: utf-8
+
+# Performs basic scRNA-seq analysis; filtering, normalization, UMAP, differential gene expression, using mainly the steps described in scanpy
+# It does this for spliced, unspliced and unspliced+spliced data simultaneously, and for each of the different biotypes ('All','ProteinCoding','lncRNA','smallRNA','TF') 
+
+# An extra filtering step is included in the kNN graph to filter out cells that are very far from their first neighbor. 
+# As a consequence, here not all cells have the same number of neighbors. This is very crucial to remove extra doublets and artifacts that other QC missed. 
+# Filtering parameters etc can be found in the filterParams self-made package. User-made functions are found in the self-made plot_aautils and sc_aautils packages.
+
+# use as: ```04_scanpy_Filtered_suUMAP_Hist.py timepoint genebody```
+
 # ## Libraries
 import sys, os
 import numpy as np
@@ -23,13 +33,19 @@ from filterParams import filterParams_allCov
 
 try:
     timepoint = sys.argv[1]
+    genebody = sys.argv[2]
 except:
-    sys.exit("Please, give timepoint (E65, E75, E85, E95)")
+    sys.exit("Please, give:\n(1) timepoint (E65, E75, E85, E95); \n(2) gene body counts (all, high)")
 
 metric = 'manhattan'
 
+if genebody == 'all':
+    from filterParams import filterParams_allCov
+elif genedoby == 'high':
+    from filterParams import filterParams_highCov
+
 # ## Output directory
-outdir = '../'+timepoint+'/res_scanpy_all_2021_noHistones'
+outdir = '../'+timepoint+'/res_scanpy_'+genebody+'_2021_noHistones'
 os.system('mkdir -p '+outdir)
 
 # ## Scanpy settings
@@ -39,19 +55,12 @@ sc.settings.figdir = outdir
 sc.settings.set_figure_params(dpi=80)
 
 # ## Read input files
-def read_h5ad_zipped(adatafile):
-    if os.path.isfile(adatafile + '.gz'):
-        os.system('gunzip '+adatafile + '.gz')
-    adata = sc.read_h5ad(adatafile)
-    os.system('gzip '+adatafile)
-    return adata
-
 bios = ['All','ProteinCoding','lncRNA','smallRNA','TF']
-folder = 'res_scanpy_all_rawQC_2021'
+folder = 'res_scanpy_'+genebody+'_rawQC_2021'
 
-adata_s = {bio: read_h5ad_zipped('../' + timepoint + '/' + folder + '/VASA_s_raw_' + bio + '.h5ad') for bio in bios}
-adata_u = {bio: read_h5ad_zipped('../' + timepoint + '/' + folder + '/VASA_u_raw_' + bio + '.h5ad') for bio in bios}
-adata_su = {bio: read_h5ad_zipped('../' + timepoint + '/' + folder + '/VASA_su_raw_' + bio + '.h5ad') for bio in bios}
+adata_s = {bio: scaa.read_h5ad_zipped('../' + timepoint + '/' + folder + '/VASA_s_raw_' + bio + '.h5ad') for bio in bios}
+adata_u = {bio: scaa.read_h5ad_zipped('../' + timepoint + '/' + folder + '/VASA_u_raw_' + bio + '.h5ad') for bio in bios}
+adata_su = {bio: scaa.read_h5ad_zipped('../' + timepoint + '/' + folder + '/VASA_su_raw_' + bio + '.h5ad') for bio in bios}
 
 # ## Filter data
 def filter_BiotypeThresholds(adata, reads_th, fracs_th, sample_out):
@@ -69,7 +78,11 @@ def filter_BiotypeThresholds(adata, reads_th, fracs_th, sample_out):
         print('--')
     return adata
 
-sample_out, reads_su_th, fracs_su_th, n_pca, resolution_s, resolution_su, min_disp = filterParams_allCov(timepoint)
+if genebody == 'all': 
+    sample_out, reads_su_th, fracs_su_th, n_pca, resolution_s, resolution_su, min_disp = filterParams_allCov(timepoint)
+elif genebody == 'high': 
+    sample_out, reads_su_th, fracs_su_th, n_pca, resolution_s, resolution_su, min_disp = filterParams_highCov(timepoint)
+    
 adata_su = filter_BiotypeThresholds(adata_su, reads_su_th, fracs_su_th, sample_out)
 
 good_cells = []
