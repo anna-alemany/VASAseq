@@ -146,7 +146,7 @@ for fq1, fq2 in zip(fq1s, fq2s):
                     if not demux: 
                         fout.write( '\n'.join([name, s, '+', q, '']))
                     else: 
-                        fout[cellbcseq].write('\n'.join([name, s, '+', q, '']))
+                        fout[originalBC].write('\n'.join([name, s, '+', q, '']))
                 except: 
                     continue
 
